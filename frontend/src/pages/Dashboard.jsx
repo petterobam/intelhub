@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { api } from '../api/client'
 import { Activity, FileText, RefreshCw, AlertTriangle,
-  CheckCircle, Zap } from 'lucide-react'
+  CheckCircle, Zap, Database, Rss, TrendingUp } from 'lucide-react'
 import clsx from 'clsx'
 
 const relTime = (iso) => {
@@ -92,22 +92,34 @@ function SystemHealth({ data }) {
 
 function TaskExec({ data }) {
   const { recent_runs, last_24h, last_failures } = data
+  const successRate = last_24h?.total > 0 ? Math.round((last_24h.done || 0) / last_24h.total * 100) : null
 
   return (
     <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/60 h-full">
       <h3 className="text-white text-sm font-semibold mb-3">任务执行</h3>
 
-      <div className="flex items-center gap-3 mb-3 text-[11px]">
-        <span className="text-slate-500">24h:</span>
-        <span className="text-slate-300">{last_24h.total} 次</span>
-        <span className="text-emerald-400">{last_24h.done} 成功</span>
-        {last_24h.failed > 0 && <span className="text-red-400">{last_24h.failed} 失败</span>}
-        <span className="text-slate-600">
-          {last_24h.avg_duration_ms ? `${(last_24h.avg_duration_ms / 1000).toFixed(1)}s` : ''}
-        </span>
+      <div className="grid grid-cols-4 gap-2 mb-3">
+        <div className="bg-white/[0.03] rounded-lg p-2 text-center">
+          <div className="text-lg font-bold text-white">{last_24h?.total || 0}</div>
+          <div className="text-[9px] text-slate-500">24h 执行</div>
+        </div>
+        <div className="bg-white/[0.03] rounded-lg p-2 text-center">
+          <div className="text-lg font-bold text-emerald-400">{last_24h?.done || 0}</div>
+          <div className="text-[9px] text-slate-500">成功</div>
+        </div>
+        <div className="bg-white/[0.03] rounded-lg p-2 text-center">
+          <div className="text-lg font-bold text-red-400">{last_24h?.failed || 0}</div>
+          <div className="text-[9px] text-slate-500">失败</div>
+        </div>
+        <div className="bg-white/[0.03] rounded-lg p-2 text-center">
+          <div className={clsx("text-lg font-bold", successRate !== null && successRate >= 90 ? 'text-emerald-400' : successRate !== null && successRate < 70 ? 'text-red-400' : 'text-white')}>
+            {successRate !== null ? `${successRate}%` : '-'}
+          </div>
+          <div className="text-[9px] text-slate-500">成功率</div>
+        </div>
       </div>
 
-      <div className="space-y-1 max-h-[180px] overflow-y-auto">
+      <div className="space-y-1 max-h-[160px] overflow-y-auto">
         {recent_runs.slice(0, 10).map(r => (
           <div key={r.id} className="flex items-center gap-2 text-[11px] py-0.5">
             <div className={clsx("w-1.5 h-1.5 rounded-full shrink-0",
@@ -126,7 +138,7 @@ function TaskExec({ data }) {
         )}
       </div>
 
-      {last_failures.length > 0 && (
+      {last_failures?.length > 0 && (
         <div className="mt-2 pt-2 border-t border-slate-700/50">
           <div className="text-[10px] text-red-400/60 mb-1">最近失败</div>
           {last_failures.slice(0, 3).map((f, i) => (
@@ -206,7 +218,7 @@ export default function Dashboard() {
         const c = localStorage.getItem('intelhub_dashboard_v2')
         if (c) {
           const cached = JSON.parse(c)
-          if (cached.ts && Date.now() - cached.ts < 60000) {
+          if (cached.ts && Date.now() - cached.ts < 30000) {
             setData(cached.d)
             setLoading(false)
             setLastRefresh(new Date(cached.ts))
@@ -229,7 +241,7 @@ export default function Dashboard() {
   useEffect(() => { loadData() }, [loadData])
 
   useEffect(() => {
-    const timer = setInterval(() => loadData(false), 60000)
+    const timer = setInterval(() => loadData(false), 30000)
     return () => clearInterval(timer)
   }, [loadData])
 
@@ -256,11 +268,11 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard icon={Activity} label="任务" value={s.tasks_total || 0}
+        <StatCard icon={Activity} label="系统任务" value={s.tasks_total || 0}
           sub={s.tasks_running > 0 ? `${s.tasks_running} 运行中` : '全部空闲'} color="blue" />
+        <StatCard icon={Rss} label="数据源" value={s.rss_sources || 0} color="orange" />
+        <StatCard icon={Database} label="24h 数据" value={s.data_items_24h || 0} color="sky" />
         <StatCard icon={FileText} label="今日报告" value={s.reports_today || 0} color="purple" />
-        <StatCard icon={Zap} label="系统健康" value={data.system_health?.health_score ?? '-'}
-          sub={data.system_health?.status === 'ok' ? '正常' : '异常'} color="emerald" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">

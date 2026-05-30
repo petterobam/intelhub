@@ -40,6 +40,32 @@ def dashboard():
         "SELECT COUNT(*) FROM reports WHERE date(generated_at) = :today"
     ), {'today': today_str}).scalar() or 0
 
+    rss_sources = db.session.execute(text(
+        "SELECT COUNT(*) FROM rss_sources WHERE enabled = 1"
+    )).scalar() or 0
+
+    data_items_today = 0
+    try:
+        raw_dir = os.path.join(_BASE_DIR, 'data', 'raw')
+        if os.path.exists(raw_dir):
+            import glob
+            for f in glob.glob(os.path.join(raw_dir, '**', '*.json'), recursive=True):
+                try:
+                    mtime = os.path.getmtime(f)
+                    if mtime >= (now - timedelta(hours=24)).timestamp():
+                        with open(f, 'r') as fp:
+                            content = json.load(fp)
+                            if isinstance(content, list):
+                                data_items_today += len(content)
+                            elif isinstance(content, dict):
+                                for v in content.values():
+                                    if isinstance(v, list):
+                                        data_items_today += len(v)
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
     recent_runs = []
     for row in db.session.execute(text(
         "SELECT tr.id, st.name, tr.status, tr.started_at, tr.duration_ms, tr.trigger_type "
@@ -138,6 +164,8 @@ def dashboard():
             'tasks_total': tasks_enabled,
             'tasks_running': running_row,
             'reports_today': reports_today,
+            'rss_sources': rss_sources,
+            'data_items_24h': data_items_today,
         },
         'system_health': {
             'health_score': health_score,
