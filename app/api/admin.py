@@ -135,6 +135,71 @@ def dashboard():
     platforms_stale = sum(1 for p in platforms_raw if p.get('status') == 'stale')
     platforms_critical = sum(1 for p in platforms_raw if p.get('status') in ('error', 'critical'))
 
+    # Crawler data freshness from data/raw/ directory
+    crawler_health = []
+    raw_dir = os.path.join(_BASE_DIR, 'data', 'raw')
+    fresh_threshold = 120  # minutes
+    stale_threshold = 360
+    for module in ['hot_topics', 'policy', 'exchange', 'financial']:
+        module_path = os.path.join(raw_dir, module)
+        if not os.path.isdir(module_path):
+            crawler_health.append({'module': module, 'status': 'empty', 'age_minutes': None, 'files': 0})
+            continue
+        newest_time = 0
+        file_count = 0
+        for root, dirs, files in os.walk(module_path):
+            for f in files:
+                if f.endswith('.json'):
+                    file_count += 1
+                    ft = os.path.getmtime(os.path.join(root, f))
+                    if ft > newest_time:
+                        newest_time = ft
+        if newest_time > 0:
+            age_min = int((now.timestamp() - newest_time) / 60)
+            if age_min < fresh_threshold:
+                status = 'fresh'
+            elif age_min < stale_threshold:
+                status = 'stale'
+            else:
+                status = 'critical'
+            crawler_health.append({'module': module, 'status': status, 'age_minutes': age_min, 'files': file_count})
+        else:
+            crawler_health.append({'module': module, 'status': 'empty', 'age_minutes': None, 'files': 0})
+
+    # RSS crawler task health from recent task_runs
+    rss_health = []
+    try:
+        for row in db.session.execute(text(
+            "SELECT st.name, st.id, MAX(tr.started_at), COUNT(tr.id), "
+            "SUM(CASE WHEN tr.status='done' THEN 1 ELSE 0 END), "
+            "SUM(CASE WHEN tr.status='failed' THEN 1 ELSE 0 END) "
+            "FROM scheduled_tasks st LEFT JOIN task_runs tr ON st.id = tr.task_id "
+            "WHERE st.task_type = 'crawler' AND st.module = 'rss' "
+            "GROUP BY st.id ORDER BY st.name"
+        )).fetchall():
+            last_run = row[2]
+            if last_run and not isinstance(last_run, str):
+                last_run = last_run.isoformat()
+            rss_health.append({
+                'name': row[0], 'id': row[1], 'last_run': last_run or '',
+                'total_runs': row[3], 'success': row[4], 'failed': row[5],
+            })
+    except Exception:
+        pass
+
+    # Calculate health score from crawler + rss + worker status
+    if not platforms_raw:
+        ok_count = sum(1 for c in crawler_health if c['status'] == 'fresh')
+        total_modules = max(len(crawler_health), 1)
+        health_score = int(ok_count / total_modules * 100)
+
+    # Add crawler health to alerts if critical
+    for c in crawler_health:
+        if c['status'] == 'critical':
+            alerts.append(f"采集模块 {c['module']} 数据过期 ({c.get('age_minutes', '?')}分钟)")
+        elif c['status'] == 'empty':
+            alerts.append(f"采集模块 {c['module']} 无数据")
+
     resonance_file = os.path.join(_BASE_DIR, 'reports', 'insight', 'cross-platform-resonance.json')
     resonance_data = _read_json(resonance_file) or {}
     hotspots = resonance_data.get('all_hotspots', [])[:8]
@@ -177,6 +242,8 @@ def dashboard():
             'platforms_stale': platforms_stale,
             'platforms_critical': platforms_critical,
             'platforms': platforms_raw[:12],
+            'crawler_health': crawler_health,
+            'rss_health': rss_health,
             'alerts': alerts[:5],
         },
         'task_exec': {

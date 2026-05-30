@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { api } from '../api/client'
 import { Activity, FileText, RefreshCw, AlertTriangle,
-  CheckCircle, Zap, Database, Rss, TrendingUp } from 'lucide-react'
+  CheckCircle, Zap, Database, Rss, Clock } from 'lucide-react'
 import clsx from 'clsx'
 
 const relTime = (iso) => {
@@ -30,16 +30,19 @@ function StatCard({ icon: Icon, label, value, sub, color }) {
 }
 
 function SystemHealth({ data }) {
-  const { health_score, status, workers_total, workers_alive, platforms_total,
-    platforms_fresh, platforms_stale, platforms_critical, platforms, alerts } = data
+  const { health_score, status, workers_total, workers_alive,
+    crawler_health = [], rss_health = [], alerts = [] } = data
 
   const scoreColor = health_score >= 70 ? 'text-emerald-400' : health_score >= 40 ? 'text-yellow-400' : 'text-red-400'
   const scoreLabel = status === 'ok' ? '正常' : status === 'degraded' ? '降级' : '异常'
+  const freshModules = crawler_health.filter(c => c.status === 'fresh').length
+  const totalModules = crawler_health.length || 1
 
   return (
-    <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/60 h-full">
+    <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/60">
       <h3 className="text-white text-sm font-semibold mb-3">系统健康</h3>
 
+      {/* Health score + Worker */}
       <div className="flex items-center gap-4 mb-3">
         <div className="text-center">
           <div className={clsx("text-3xl font-bold", scoreColor)}>{health_score}</div>
@@ -53,33 +56,72 @@ function SystemHealth({ data }) {
             </span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500">平台数据</span>
+            <span className="text-slate-500">采集模块</span>
             <span>
-              <span className="text-emerald-400">{platforms_fresh}</span>
-              {platforms_stale > 0 && <span className="text-yellow-400 ml-1">{platforms_stale}慢</span>}
-              {platforms_critical > 0 && <span className="text-red-400 ml-1">{platforms_critical}挂</span>}
-              <span className="text-slate-600 ml-1">/ {platforms_total}</span>
+              <span className="text-emerald-400">{freshModules}</span>
+              <span className="text-slate-600 ml-1">/ {totalModules} 新鲜</span>
             </span>
           </div>
         </div>
       </div>
 
-      {platforms?.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {platforms.slice(0, 16).map(p => (
-            <div key={p.platform} className="flex items-center gap-1" title={`${p.platform} — ${p.age_minutes}m`}>
-              <div className={clsx("w-1.5 h-1.5 rounded-full",
-                p.status === 'fresh' ? 'bg-emerald-400' : p.status === 'stale' ? 'bg-yellow-400' : 'bg-red-400'
-              )} />
-              <span className="text-[10px] text-slate-500">{p.platform?.slice(0, 8)}</span>
-            </div>
-          ))}
+      {/* Crawler modules */}
+      {crawler_health.length > 0 && (
+        <div className="mb-3">
+          <div className="text-[10px] text-slate-500 mb-1.5 uppercase tracking-wider">爬虫数据</div>
+          <div className="space-y-1">
+            {crawler_health.map(c => {
+              const statusDot = c.status === 'fresh' ? 'bg-emerald-400' : c.status === 'stale' ? 'bg-yellow-400' : c.status === 'critical' ? 'bg-red-400' : 'bg-slate-600'
+              const moduleLabel = { hot_topics: '热点', policy: '政策', exchange: '交易所', financial: '巨潮' }[c.module] || c.module
+              return (
+                <div key={c.module} className="flex items-center gap-2 text-[11px]">
+                  <div className={clsx("w-1.5 h-1.5 rounded-full", statusDot)} />
+                  <span className="text-slate-300 w-12">{moduleLabel}</span>
+                  {c.status !== 'empty' ? (
+                    <>
+                      <span className={clsx(
+                        c.status === 'fresh' ? 'text-emerald-400' : c.status === 'stale' ? 'text-yellow-400' : 'text-red-400'
+                      )}>{c.age_minutes}m</span>
+                      <span className="text-slate-600">{c.files} 文件</span>
+                    </>
+                  ) : (
+                    <span className="text-slate-600">无数据</span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 
-      {alerts?.length > 0 && (
+      {/* RSS crawlers */}
+      {rss_health.length > 0 && (
+        <div className="mb-2">
+          <div className="text-[10px] text-slate-500 mb-1.5 uppercase tracking-wider">RSS 采集</div>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+            {rss_health.map(r => {
+              const label = r.name.replace('RSS-', '')
+              const hasError = r.failed > 0
+              return (
+                <div key={r.id} className="flex items-center gap-1.5 text-[11px]">
+                  <div className={clsx("w-1.5 h-1.5 rounded-full",
+                    hasError ? 'bg-red-400' : r.last_run ? 'bg-emerald-400' : 'bg-slate-600'
+                  )} />
+                  <span className="text-slate-300 truncate">{label}</span>
+                  {r.last_run && (
+                    <span className="text-slate-600 shrink-0">{relTime(r.last_run)}</span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Alerts */}
+      {alerts.length > 0 && (
         <div className="mt-2 space-y-0.5">
-          {alerts.slice(0, 2).map((a, i) => (
+          {alerts.slice(0, 3).map((a, i) => (
             <div key={i} className="flex items-center gap-1 text-[10px] text-red-400/80">
               <AlertTriangle size={10} />{a}
             </div>
