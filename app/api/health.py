@@ -37,6 +37,34 @@ def crawlers_health():
     return standard_response({'platforms': [], 'health_score': 100})
 
 
+@bp.route('/task-stats', methods=['GET'])
+def task_stats():
+    """24h 任务执行统计"""
+    from app import db
+    from sqlalchemy import text
+
+    now = bj_now()
+    yesterday = (now - timedelta(hours=24)).isoformat()
+
+    h24 = {'total': 0, 'done': 0, 'failed': 0, 'timeout': 0, 'avg_duration_ms': 0}
+    for row in db.session.execute(text(
+        "SELECT status, COUNT(*), AVG(duration_ms) "
+        "FROM task_runs WHERE started_at >= :y GROUP BY status"
+    ), {'y': yesterday}).fetchall():
+        h24['total'] += row[1]
+        if row[0] == 'done':
+            h24['done'] = row[1]
+            h24['avg_duration_ms'] = int(row[2] or 0)
+        elif row[0] == 'failed':
+            h24['failed'] = row[1]
+        elif row[0] == 'timeout':
+            h24['timeout'] = row[1]
+
+    return standard_response({
+        'last_24h': h24,
+    })
+
+
 @bp.route('/schedulers', methods=['GET'])
 def schedulers_status():
     """实时调度器监控：Worker 心跳 + 任务运行状态"""

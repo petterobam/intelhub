@@ -11,7 +11,7 @@
 [![License](https://img.shields.io/badge/License-AGPL--3.0-green.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-[English](#english) · [功能](#-功能) · [快速开始](#-快速开始) · [架构](#-架构) · [路线图](#-演进路线) · [Pro 版本](#-intelhub-pro)
+[功能](#-功能) · [截图](#-截图) · [快速开始](#-快速开始) · [架构](#-架构) · [路线图](#-演进路线) · [Pro 版本](#-intelhub-pro)
 
 </div>
 
@@ -98,14 +98,26 @@ LLM 驱动的多轮分析：跨平台共振 → 趋势识别 → 投资洞察。
 
 <table>
 <tr>
-<td><img src="dashboard-after-cleanup.png" alt="Dashboard" /></td>
+<td align="center"><img src="screenshot-plaza.png" alt="Plaza - 情报广场" width="800" /></td>
+</tr>
+<tr>
+<td align="center"><em>情报广场 — 全网热点数据聚合，多源情报一站浏览</em></td>
+</tr>
+<tr><td>&nbsp;</td></tr>
+<tr>
+<td align="center"><img src="screenshot-dashboard.png" alt="Dashboard" width="800" /></td>
 </tr>
 <tr>
 <td align="center"><em>Dashboard — 系统健康、任务执行、热点追踪一目了然</em></td>
 </tr>
+<tr><td>&nbsp;</td></tr>
+<tr>
+<td align="center"><img src="screenshot-health.png" alt="Health - 系统健康" width="800" /></td>
+</tr>
+<tr>
+<td align="center"><em>系统健康 — 平台采集状态、调度器监控、执行统计</em></td>
+</tr>
 </table>
-
-> 欢迎提交更多截图 PR！
 
 ---
 
@@ -144,7 +156,13 @@ python3 scripts/seed_rss_sources.py
 
 ### 配置 LLM
 
-编辑 `.env` 文件，配置你的 AI 模型：
+IntelHub 支持多种 AI 后端，有两种配置方式：
+
+**方式一：平台配置中心（推荐）**
+
+启动后打开 **配置中心** 页面，可视化配置 LLM、SMTP、站点信息，无需手动编辑文件。
+
+**方式二：.env 文件**
 
 ```bash
 # 方案一：Claude（推荐）
@@ -308,6 +326,6 @@ IntelHub is licensed under the [AGPL-3.0 License](LICENSE).
 
 **把全网信息变成可行动的情报**
 
-[开始使用](#-快速开始) · [反馈需求](https://github.com/petterobam/intelhub/issues) · [Pro 版本](https://www.intelhub.club/)
+[开始使用](#-快速开始) · [提交 Issue](https://github.com/petterobam/intelhub/issues) · [Pro 版本](https://www.intelhub.club/)
 
 </div>

@@ -1,6 +1,4 @@
-import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { api } from '../api/client'
 import {
   Flame, Rss, FileText, BookOpen, MessageSquare, Clock, Mail, Zap,
   Search, Layers, Globe, Brain, Wrench, ArrowRight, Sparkles,
@@ -101,14 +99,6 @@ const VISIONS = [
 ]
 
 export default function About() {
-  const [feedbacks, setFeedbacks] = useState([])
-
-  useEffect(() => {
-    api.get('/api/v1/feedback?limit=3').then(res => {
-      setFeedbacks(res.data?.data || [])
-    }).catch(() => {})
-  }, [])
-
   return (
     <div className="max-w-4xl mx-auto space-y-16">
       {/* Hero */}
@@ -186,45 +176,12 @@ export default function About() {
         </div>
       </section>
 
-      {/* Feedback */}
-      <section>
-        <Link to="/feedback"
-          className="block bg-slate-800 rounded-xl border border-slate-700 p-5 hover:border-slate-600 transition-all group">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-pink-500/10 flex items-center justify-center">
-                <MessageCircle size={18} className="text-pink-400" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-white group-hover:text-sky-400 transition-colors">用户反馈</h3>
-                <p className="text-[11px] text-slate-500">帮助我们变得更好</p>
-              </div>
-            </div>
-            <ArrowRight size={16} className="text-slate-600 group-hover:text-sky-400 transition-colors" />
-          </div>
-          {feedbacks.length > 0 ? (
-            <div className="space-y-2 mt-3 border-t border-slate-700/50 pt-3">
-              {feedbacks.map(fb => (
-                <div key={fb.id} className="text-xs text-slate-400 truncate">
-                  <span className="text-slate-500 mr-1.5">{fb.nickname || '用户'}</span>
-                  {fb.content}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-slate-600 mt-3 border-t border-slate-700/50 pt-3">
-              成为第一个反馈者，告诉我们你的想法和需求
-            </p>
-          )}
-        </Link>
-      </section>
-
       {/* CTA */}
       <div className="text-center pb-8">
         <div className="bg-gradient-to-r from-blue-500/10 via-sky-500/10 to-purple-500/10 rounded-xl border border-[#1a2540] p-8">
           <Sparkles size={28} className="text-blue-400 mx-auto mb-3" />
           <h3 className="text-lg font-bold text-white mb-2">开始使用 IntelHub</h3>
-          <p className="text-sm text-slate-400 mb-5">注册即可免费体验基础情报能力</p>
+          <p className="text-sm text-slate-400 mb-5">一键启动，立刻拥有你的情报中心</p>
           <Link to="/plaza"
             className="inline-flex items-center gap-2 bg-sky-500 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-sky-600 transition-colors whitespace-nowrap">
             开始使用 <ArrowRight size={14} />
