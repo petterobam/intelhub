@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>隐私政策 - IntelHub</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      line-height: 1.8;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 720px; margin: 0 auto; }
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 2rem; text-decoration: none; color: #f8fafc;
+    }
+    .brand svg { width: 28px; height: 28px; }
+    .brand span { font-size: 1.2rem; font-weight: 600; }
+    h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; color: #f8fafc; }
+    .updated { color: #94a3b8; font-size: 0.875rem; margin-bottom: 2rem; }
+    h2 { font-size: 1.15rem; font-weight: 600; color: #38bdf8; margin-top: 2rem; margin-bottom: 0.75rem; }
+    p { margin-bottom: 1rem; color: #cbd5e1; }
+    ul { margin: 0.5rem 0 1rem 1.5rem; color: #cbd5e1; }
+    li { margin-bottom: 0.4rem; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    th, td { text-align: left; padding: 0.6rem 1rem; border-bottom: 1px solid #1e293b; font-size: 0.9rem; }
+    th { color: #94a3b8; font-weight: 500; }
+    td { color: #cbd5e1; }
+    hr { border: none; border-top: 1px solid #1e293b; margin: 2rem 0; }
+    footer { text-align: center; color: #475569; font-size: 0.8rem; margin-top: 3rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a class="brand" href="/">
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="flame" x1="16" y1="2" x2="16" y2="30" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#f97316"/><stop offset="0.5" stop-color="#ef4444"/><stop offset="1" stop-color="#dc2626"/>
+        </linearGradient></defs>
+        <path d="M16 2C16 2 10 9 10 16C10 20 12.5 24 16 26C19.5 24 22 20 22 16C22 9 16 2 16 2Z" fill="url(#flame)"/>
+        <path d="M16 12C16 12 13 16 13 19C13 21.5 14.3 23.5 16 25C17.7 23.5 19 21.5 19 19C19 16 16 12 16 12Z" fill="#fbbf24"/>
+      </svg>
+      <span>IntelHub</span>
+    </a>
+
+    <h1>隐私政策</h1>
+    <p class="updated">最后更新：2026 年 5 月 24 日</p>
+
+    <p>IntelHub（以下简称"我们"）重视您的隐私。本隐私政策说明我们如何收集、使用、存储和保护您的个人信息。</p>
+
+    <h2>1. 我们收集的信息</h2>
+
+    <h2 style="font-size: 1rem; color: #94a3b8; margin-top: 1rem;">1.1 您主动提供的信息</h2>
+    <ul>
+      <li><strong>账户信息</strong>：注册时提供的邮箱地址、显示名称</li>
+      <li><strong>OAuth 信息</strong>：通过第三方登录时，我们获取该平台提供的邮箱和昵称</li>
+      <li><strong>订阅偏好</strong>：您选择关注的报告类型和推送频率</li>
+    </ul>
+
+    <h2 style="font-size: 1rem; color: #94a3b8; margin-top: 1rem;">1.2 自动收集的信息</h2>
+    <ul>
+      <li><strong>使用日志</strong>：访问时间、页面浏览、功能使用记录</li>
+      <li><strong>设备信息</strong>：浏览器类型、操作系统、设备标识</li>
+    </ul>
+
+    <h2 style="font-size: 1rem; color: #94a3b8; margin-top: 1rem;">1.3 我们不收集的信息</h2>
+    <ul>
+      <li>我们不收集身份证号、银行卡号等敏感个人数据</li>
+      <li>我们不收集通讯录、相册等设备权限数据</li>
+    </ul>
+
+    <h2>2. 信息使用目的</h2>
+    <table>
+      <thead>
+        <tr><th>目的</th><th>涉及信息</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>账户管理与认证</td><td>邮箱、OAuth 凭证</td></tr>
+        <tr><td>提供个性化服务</td><td>订阅偏好、使用记录</td></tr>
+        <tr><td>发送通知与报告</td><td>邮箱地址</td></tr>
+        <tr><td>服务改进与分析</td><td>使用日志（匿名化）</td></tr>
+        <tr><td>安全保障</td><td>访问日志、设备信息</td></tr>
+      </tbody>
+    </table>
+
+    <h2>3. 信息存储与保护</h2>
+    <ul>
+      <li><strong>存储位置</strong>：数据存储在我们控制的服务器上，位于中华人民共和国境内</li>
+      <li><strong>加密措施</strong>：密码使用 bcrypt 哈希存储，API 密钥和敏感配置加密保存</li>
+      <li><strong>传输安全</strong>：所有数据传输使用 TLS 加密（HTTPS）</li>
+      <li><strong>访问控制</strong>：仅授权人员可访问用户数据，且需遵循最小权限原则</li>
+    </ul>
+
+    <h2>4. 信息共享</h2>
+    <p>我们不会出售、交易或出租您的个人信息。仅在以下情况下可能共享：</p>
+    <ul>
+      <li><strong>服务提供商</strong>：为发送邮件通知，我们会将您的邮箱传递给 SMTP 服务</li>
+      <li><strong>AI 服务</strong>：为生成分析报告，数据可能发送至您配置的 LLM API 服务</li>
+      <li><strong>法律要求</strong>：在法律法规要求或司法程序需要时</li>
+    </ul>
+
+    <h2>5. 第三方 OAuth 服务</h2>
+    <p>当您选择通过第三方（GitHub、Google、Microsoft、Discord、微信、飞书）登录时：</p>
+    <ul>
+      <li>我们仅获取该平台授权范围内的基本信息（邮箱、昵称）</li>
+      <li>您的第三方账户密码不会经过我们的服务器</li>
+      <li>各平台的隐私政策适用于其各自的服务</li>
+    </ul>
+
+    <h2>6. Cookie 使用</h2>
+    <p>我们使用 Cookie 进行会话管理和安全验证（如 OAuth state 令牌）。我们不使用第三方追踪 Cookie 或广告 Cookie。</p>
+
+    <h2>7. 您的权利</h2>
+    <p>根据适用的数据保护法律，您有权：</p>
+    <ul>
+      <li>访问您的个人数据</li>
+      <li>更正不准确的个人数据</li>
+      <li>请求删除您的账户和相关数据</li>
+      <li>撤回对数据处理的同意</li>
+      <li>导出您的数据</li>
+    </ul>
+    <p>如需行使以上权利，请通过平台内反馈功能与我们联系。</p>
+
+    <h2>8. 数据保留期限</h2>
+    <ul>
+      <li>账户数据：在账户存续期间保留，账户删除后 30 天内清除</li>
+      <li>使用日志：保留 90 天后自动清除</li>
+      <li>报告数据：按用户设置保留，用户可随时手动删除</li>
+    </ul>
+
+    <h2>9. 儿童隐私</h2>
+    <p>本平台不面向 14 周岁以下的儿童。我们不会故意收集儿童的个人信息。如果我们发现已收集儿童数据，将立即删除。</p>
+
+    <h2>10. 政策更新</h2>
+    <p>我们可能不时更新本隐私政策。重大变更将通过平台公告或邮件通知。继续使用本平台即表示您接受更新后的政策。</p>
+
+    <h2>11. 联系我们</h2>
+    <p>如您对本隐私政策有任何疑问或建议，请通过平台内的反馈功能与我们联系。</p>
+
+    <hr />
+    <footer>&copy; 2026 IntelHub. All rights reserved.</footer>
+  </div>
+</body>
+</html>

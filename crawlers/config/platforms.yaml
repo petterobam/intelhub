@@ -1,0 +1,173 @@
+hot_topics:
+  weibo:
+    name: "微博热搜"
+    url: "https://weibo.com/ajax/side/hotSearch"
+    method: api
+    schedule: "30m"
+    priority: high
+
+  douyin:
+    name: "抖音热榜"
+    url: "https://www.douyin.com/aweme/v1/web/hot/search/list/"
+    method: api
+    schedule: "30m"
+    priority: high
+
+  zhihu:
+    name: "知乎热榜"
+    url: "https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total"
+    method: api
+    schedule: "60m"
+    priority: medium
+
+  36kr:
+    name: "36氪"
+    url: "https://www.36kr.com/newsflashes"
+    method: api
+    schedule: "60m"
+    priority: high
+
+  huxiu:
+    name: "虎嗅"
+    url: "https://www.huxiu.com/article/"
+    method: api
+    schedule: "90m"
+    priority: medium
+
+  eastmoney:
+    name: "东方财富"
+    url: "https://newsapi.eastmoney.com/kuaixun/v1/getlist_102_ajaxResult_50_1_.html"
+    method: api
+    schedule: "60m"
+    priority: high
+
+  paper:
+    name: "澎湃新闻"
+    url: "https://m.thepaper.cn/"
+    method: api
+    schedule: "60m"
+    priority: high
+
+  wangyi:
+    name: "网易新闻"
+    url: "https://3g.163.com/touch/reconstruct/article/list/BBM54PGAwangning/0-20.html"
+    method: api
+    schedule: "60m"
+    priority: medium
+
+  huanqiu:
+    name: "环球网"
+    url: "https://world.huanqiu.com/"
+    method: api
+    schedule: "90m"
+    priority: medium
+
+  sspai:
+    name: "少数派"
+    url: "https://sspai.com/api/v1/article/index/page/get?limit=30"
+    method: api
+    schedule: "120m"
+    priority: low
+    category: tech
+
+  ithome:
+    name: "IT之家"
+    url: "https://m.ithome.com/api/news/newslistpage?type=0&page=1"
+    method: api
+    schedule: "60m"
+    priority: medium
+    category: tech
+
+  github:
+    name: "GitHub Trending"
+    url: "https://github.com/trending"
+    method: api
+    schedule: "360m"
+    priority: low
+    category: tech
+
+  wallstreet:
+    name: "华尔街见闻"
+    url: "https://api-one-wscn.awtmt.com/apiv1/content/live-stream?channel=global-channel&limit=30"
+    method: api
+    schedule: "60m"
+    priority: high
+    category: finance
+
+  yicai:
+    name: "第一财经"
+    url: "https://www.yicai.com/api/ajax/getlatest?page=1&pagesize=30"
+    method: api
+    schedule: "60m"
+    priority: medium
+    category: finance
+
+  bilibili:
+    name: "B站热门"
+    url: "https://api.bilibili.com/x/web-interface/popular?ps=50"
+    method: api
+    schedule: "60m"
+    priority: high
+
+  toutiao:
+    name: "今日头条"
+    url: "https://www.toutiao.com/hot-event/hot-board/?origin=hot_board&widen=1"
+    method: api
+    schedule: "30m"
+    priority: high
+
+  caixin:
+    name: "财新网"
+    url: "https://gateway.caixin.com/api/extapi/homeInterface.jsp?subject=100589266&start=1&count=30&type=2"
+    method: api
+    schedule: "60m"
+    priority: high
+
+  "1905":
+    name: "1905电影网"
+    url: "https://www.1905.com/news/"
+    method: api
+    schedule: "180m"
+    priority: low
+
+policy:
+  pbc:
+    name: "中国人民银行"
+    url: "http://www.pbc.gov.cn/zhengcehuobisi/125207/125213/index.html"
+    method: api
+    schedule: "180m"
+    priority: high
+
+  boc:
+    name: "银保监会"
+    url: "http://www.cbirc.gov.cn/cn/view/pages/tongzhigonggao/gonggao.html"
+    method: api
+    schedule: "180m"
+    priority: high
+
+  gov:
+    name: "国务院"
+    url: "http://www.gov.cn/zhengce/"
+    method: api
+    schedule: "180m"
+    priority: high
+
+exchange:
+  sse:
+    name: "上交所"
+    url: "http://www.sse.com.cn/disclosure/"
+    method: api
+    schedule: "0 9,13,15 * * 1-5"
+
+  szse:
+    name: "深交所"
+    url: "http://www.szse.cn/disclosure/index.html"
+    method: api
+    schedule: "0 9,13,15 * * 1-5"
+
+financial:
+  cninfo:
+    name: "巨潮资讯"
+    url: "http://www.cninfo.com.cn/new/disclosure"
+    method: api
+    schedule: "0 8,12,16 * * 1-5"

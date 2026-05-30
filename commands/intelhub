@@ -1,0 +1,3 @@
+#!/bin/bash
+# Quick alias: python3 commands/intelhub <command>
+cd "$(dirname "$0")/.." && python3 run.py "$@"

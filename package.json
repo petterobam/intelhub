@@ -1,0 +1,19 @@
+{
+  "name": "intel-hub",
+  "version": "1.0.0",
+  "description": "整合热点采集、政策监控、交易所公告、巨潮资讯、投资分析的系统化平台。",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "iconv-lite": "^0.7.2"
+  }
+}

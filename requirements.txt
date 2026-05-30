@@ -1,0 +1,37 @@
+# Web framework
+flask>=3.0
+flask-cors>=4.0
+flask-sqlalchemy>=3.1
+setproctitle>=1.3
+
+# Task scheduler
+apscheduler>=3.10
+
+# HTTP & scraping
+requests>=2.31
+beautifulsoup4>=4.12
+lxml>=5.0
+feedparser>=6.0
+
+# Configuration
+python-dotenv>=1.0
+pyyaml>=6.0
+
+# Auth
+PyJWT>=2.8
+
+# AI & Analysis
+claude-agent-sdk>=0.1.80
+anthropic>=0.40
+openai>=1.0
+anyio>=4.0
+
+# Markdown & document processing
+markdown2>=2.5
+
+# File parsing
+pdfminer.six>=20221105
+python-docx>=1.1
+
+# Production server
+gunicorn>=21.2
