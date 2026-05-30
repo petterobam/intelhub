@@ -18,8 +18,7 @@ import PushChannels from './pages/PushChannels'
 import McpTools from './pages/McpTools'
 import PushStats from './pages/PushStats'
 import About from './pages/About'
-import Feedback from './pages/Feedback'
-import { LayoutDashboard, Clock, Globe, Database, FileText, Heart, FileCode, MessageSquare, BookOpen, Settings as SettingsIcon, Mail, Rss, Layers, Activity, UserCircle, Send, Cpu, Flame, Menu, Info, MessageCircle } from 'lucide-react'
+import { LayoutDashboard, Clock, Globe, Database, FileText, Heart, FileCode, MessageSquare, BookOpen, Settings as SettingsIcon, Mail, Rss, Layers, Activity, Send, Cpu, Flame, Menu, Info } from 'lucide-react'
 import clsx from 'clsx'
 
 const Chat = lazy(() => import('./pages/Chat'))
@@ -42,9 +41,15 @@ function NavLink({ to, icon: Icon, label }) {
 
 const MENU = [
   {
+    group: '情报中心', icon: Flame,
+    items: [
+      { to: '/plaza', icon: Flame, label: '情报广场' },
+      { to: '/chat', icon: MessageSquare, label: 'AI 对话' },
+    ]
+  },
+  {
     group: '数据采集', icon: Layers,
     items: [
-      { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
       { to: '/crawlers', icon: Globe, label: '爬虫节点' },
       { to: '/tasks', icon: Clock, label: '任务管理' },
     ]
@@ -61,22 +66,15 @@ const MENU = [
   {
     group: '系统运维', icon: Activity,
     items: [
+      { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
       { to: '/health', icon: Heart, label: '系统健康' },
       { to: '/scripts', icon: FileCode, label: '脚本与模板' },
       { to: '/subscriptions', icon: Mail, label: '订阅中心' },
+      { to: '/push-channels', icon: Send, label: '推送渠道' },
       { to: '/settings', icon: SettingsIcon, label: '配置中心' },
       { to: '/push-stats', icon: Send, label: '推送统计' },
       { to: '/mcp-tools', icon: Cpu, label: 'MCP 工具' },
-    ]
-  },
-  {
-    group: '其他', icon: UserCircle,
-    items: [
-      { to: '/plaza', icon: Flame, label: '情报广场' },
-      { to: '/chat', icon: MessageSquare, label: 'AI 对话' },
-      { to: '/push-channels', icon: Send, label: '推送渠道' },
       { to: '/about', icon: Info, label: '关于平台' },
-      { to: '/feedback', icon: MessageCircle, label: '用户反馈' },
     ]
   },
 ]
@@ -165,7 +163,6 @@ function AppLayout() {
             <Route path="/push-stats" element={<PushStats />} />
             <Route path="/mcp-tools" element={<McpTools />} />
             <Route path="/about" element={<About />} />
-            <Route path="/feedback" element={<Feedback />} />
             <Route path="/chat" element={
               <Suspense fallback={<div className="text-slate-500 text-sm p-4">加载中...</div>}>
                 <Chat />
