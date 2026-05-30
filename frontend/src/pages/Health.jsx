@@ -1,13 +1,20 @@
 import { useEffect, useState, useCallback } from 'react'
 import { api } from '../api/client'
-import {
-  Heart, Globe, AlertTriangle, Activity, RefreshCw, CircleDot,
-  ChevronDown, ChevronRight, Cpu, Database, Clock, CheckCircle,
-  XCircle, Zap, Server, FileText
+import { Heart, Globe, AlertTriangle, Activity, RefreshCw, CircleDot,
+  ChevronDown, ChevronRight, Cpu, Clock, CheckCircle,
+  XCircle, Zap, Flame, Rss, Landmark, TrendingUp, Newspaper, FileText
 } from 'lucide-react'
 import clsx from 'clsx'
 
 const PAGE_SIZE = 8
+
+const CATEGORY_META = {
+  hot_topics: { label: '热点话题', icon: Flame, color: 'orange' },
+  policy: { label: '政策法规', icon: Newspaper, color: 'blue' },
+  exchange: { label: '交易所', icon: TrendingUp, color: 'sky' },
+  financial: { label: '财经数据', icon: Landmark, color: 'purple' },
+  rss: { label: 'RSS 订阅', icon: Rss, color: 'emerald' },
+}
 
 export default function Health() {
   const [health, setHealth] = useState(null)
@@ -17,6 +24,9 @@ export default function Health() {
   const [loading, setLoading] = useState(true)
   const [expandedWorker, setExpandedWorker] = useState(null)
   const [pageMap, setPageMap] = useState({})
+  const [expandedCategories, setExpandedCategories] = useState({})
+  const [showInvalidRss, setShowInvalidRss] = useState(false)
+  const [invalidRssPage, setInvalidRssPage] = useState(0)
 
   const fetchData = useCallback(() => {
     Promise.all([
@@ -58,16 +68,23 @@ export default function Health() {
 
   const score = health?.health_score || 0
   const status = health?.status || 'unknown'
-  const platforms = freshness?.platforms || []
   const scoreColor = score >= 70 ? 'text-emerald-400' : score >= 40 ? 'text-amber-400' : 'text-red-400'
   const statusLabel = status === 'ok' ? '正常运行' : status === 'degraded' ? '性能下降' : '需要关注'
   const statusBg = status === 'ok' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : status === 'degraded' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
   const sum = schedulers?.summary || {}
   const stats = taskStats || {}
+  const categoryGroups = freshness?.category_groups || {}
+  const totalPlatforms = freshness?.platforms?.length || 0
+  const freshCount = freshness?.fresh_count || 0
+  const criticalCount = freshness?.critical_count || 0
 
   const toggleWorker = (wid) => {
     setExpandedWorker(prev => prev === wid ? null : wid)
     setPageMap(prev => ({ ...prev, [wid]: 0 }))
+  }
+
+  const toggleCategory = (cat) => {
+    setExpandedCategories(prev => ({ ...prev, [cat]: !prev[cat] }))
   }
 
   return (
@@ -104,20 +121,19 @@ export default function Health() {
             <span className="text-slate-500 text-xs">平台数据</span>
           </div>
           <div className="flex items-end gap-2">
-            <span className="text-3xl font-bold text-white tracking-tight">{freshness?.fresh_count || 0}</span>
-            <span className="text-sm text-slate-600 mb-1">/ {platforms.length}</span>
+            <span className="text-3xl font-bold text-white tracking-tight">{freshCount}</span>
+            <span className="text-sm text-slate-600 mb-1">/ {totalPlatforms}</span>
           </div>
-          {(freshness?.stale_count > 0 || freshness?.critical_count > 0) && (
+          {(freshness?.critical_count > 0) && (
             <div className="text-[10px] mt-1">
-              {freshness.stale_count > 0 && <span className="text-amber-400 mr-1.5">{freshness.stale_count} 延迟</span>}
-              {freshness.critical_count > 0 && <span className="text-red-400">{freshness.critical_count} 异常</span>}
+              <span className="text-red-400">{freshness.critical_count} 异常</span>
             </div>
           )}
         </div>
 
         <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/60">
           <div className="flex items-center gap-2 mb-2">
-            <div className="p-1.5 rounded-lg bg-purple-500/15"><Server size={14} className="text-purple-400" /></div>
+            <div className="p-1.5 rounded-lg bg-purple-500/15"><Cpu size={14} className="text-purple-400" /></div>
             <span className="text-slate-500 text-xs">Worker</span>
           </div>
           <div className="flex items-end gap-2">
@@ -305,12 +321,156 @@ export default function Health() {
         )}
       </div>
 
-      {/* Platform freshness grid */}
-      {platforms.length > 0 && (
+      {/* RSS 数据源健康摘要 */}
+      {categoryGroups.rss && (() => {
+        const rss = categoryGroups.rss
+        const invalidList = (rss.platforms || []).filter(p => p.status === 'critical' || p.status === 'missing')
+        const validCount = rss.fresh + rss.stale
+        const pageSize = 20
+        const totalPages = Math.ceil(invalidList.length / pageSize)
+        const pageItems = invalidList.slice(invalidRssPage * pageSize, (invalidRssPage + 1) * pageSize)
+        return (
+          <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/60">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Rss size={15} className="text-emerald-400" />
+                <h3 className="text-sm font-semibold text-white">RSS 数据源健康</h3>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-center">
+                  <div className="text-lg font-bold text-emerald-400">{validCount}</div>
+                  <div className="text-[10px] text-slate-500">有效</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-red-400">{rss.critical}</div>
+                  <div className="text-[10px] text-slate-500">无效</div>
+                </div>
+                <div className="w-32 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${rss.total > 0 ? (validCount / rss.total) * 100 : 0}%` }} />
+                </div>
+                <span className="text-[10px] text-slate-500">{rss.total} 总计</span>
+              </div>
+            </div>
+
+            {invalidList.length > 0 && (
+              <div className="border-t border-slate-700/40 pt-3">
+                <button
+                  onClick={() => { setShowInvalidRss(!showInvalidRss); setInvalidRssPage(0) }}
+                  className="flex items-center gap-1.5 text-xs text-red-400/80 hover:text-red-300 transition-colors"
+                >
+                  {showInvalidRss ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                  <AlertTriangle size={12} />
+                  <span>{invalidList.length} 个无效数据源</span>
+                  <span className="text-[10px] text-slate-600 ml-1">（无数据或访问不通）</span>
+                </button>
+
+                {showInvalidRss && (
+                  <div className="mt-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1">
+                      {pageItems.map(p => (
+                        <div key={p.platform} className="flex items-center gap-2 py-0.5" title={`${p.status} — ${p.age_minutes >= 9999 ? '无数据' : `${(p.age_minutes / 60).toFixed(0)}h前`}`}>
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-red-400" />
+                          <span className="text-[11px] text-slate-400 truncate">{p.platform}</span>
+                          <span className="text-[9px] text-slate-600 ml-auto shrink-0">
+                            {p.age_minutes >= 9999 ? '无数据' : `${(p.age_minutes / 60).toFixed(0)}h`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-[10px] text-slate-600">
+                          第 {invalidRssPage + 1}/{totalPages} 页，共 {invalidList.length} 条
+                        </span>
+                        <div className="flex gap-1">
+                          <button disabled={invalidRssPage === 0}
+                            onClick={() => setInvalidRssPage(p => Math.max(0, p - 1))}
+                            className="text-[10px] px-2 py-0.5 rounded bg-white/[0.03] text-slate-400 hover:text-white disabled:opacity-30"
+                          >上一页</button>
+                          <button disabled={invalidRssPage >= totalPages - 1}
+                            onClick={() => setInvalidRssPage(p => Math.min(totalPages - 1, p + 1))}
+                            className="text-[10px] px-2 py-0.5 rounded bg-white/[0.03] text-slate-400 hover:text-white disabled:opacity-30"
+                          >下一页</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })()}
+
+      {/* 分类采集状态 */}
+      {Object.keys(categoryGroups).length > 0 && (
+        <div className="space-y-3">
+          {Object.entries(categoryGroups).filter(([k]) => k !== 'rss').map(([catKey, catData]) => {
+            const meta = CATEGORY_META[catKey] || { label: catKey, icon: Globe, color: 'slate' }
+            const CatIcon = meta.icon
+            const isExpanded = expandedCategories[catKey]
+            const platforms = catData.platforms || []
+            const displayPlatforms = isExpanded ? platforms : platforms.slice(0, 12)
+            const hasMore = !isExpanded && platforms.length > displayPlatforms.length
+
+            return (
+              <div key={catKey} className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/60">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <CatIcon size={15} className={`text-${meta.color}-400`} />
+                    <h3 className="text-sm font-semibold text-white">{meta.label}</h3>
+                    <span className="text-[10px] text-slate-500">{catData.total} 个数据源</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-400 text-[11px]">{catData.fresh} 正常</span>
+                    {catData.stale > 0 && <span className="text-amber-400 text-[11px]">{catData.stale} 过期</span>}
+                    {catData.critical > 0 && <span className="text-red-400 text-[11px]">{catData.critical} 异常</span>}
+                    <div className="w-24 h-1.5 bg-slate-700 rounded-full overflow-hidden ml-1">
+                      <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${catData.total > 0 ? (catData.fresh / catData.total) * 100 : 0}%` }} />
+                    </div>
+                  </div>
+                </div>
+
+                {platforms.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1">
+                      {displayPlatforms.map(p => {
+                        const dots = { fresh: 'bg-emerald-400', stale: 'bg-amber-400', critical: 'bg-red-400', missing: 'bg-slate-600' }
+                        return (
+                          <div key={p.platform} className="flex items-center gap-2 py-1">
+                            <span className={clsx("w-1.5 h-1.5 rounded-full shrink-0", dots[p.status] || 'bg-slate-600')} />
+                            <span className="text-[11px] text-slate-300 truncate">{p.platform}</span>
+                            <span className="text-[10px] text-slate-600 ml-auto shrink-0">
+                              {p.age_minutes >= 9999 ? '-' : p.age_minutes < 60 ? `${p.age_minutes}m` : `${(p.age_minutes / 60).toFixed(1)}h`}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {(hasMore || isExpanded) && (
+                      <button
+                        onClick={() => toggleCategory(catKey)}
+                        className="mt-2 text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
+                      >
+                        {isExpanded ? '收起' : `展开全部 ${platforms.length} 个数据源`}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-[11px] text-slate-600">暂无数据</p>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Fallback: 无 category_groups 时展示平铺列表 */}
+      {!Object.keys(categoryGroups).length && freshness?.platforms?.length > 0 && (
         <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/60">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Database size={16} className="text-emerald-400" />
+              <Globe size={16} className="text-emerald-400" />
               <h3 className="text-sm font-semibold text-white">平台采集状态</h3>
             </div>
             <div className="flex items-center gap-3 text-[10px]">
@@ -320,10 +480,10 @@ export default function Health() {
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1">
-            {platforms.map(p => {
-              const dots = { fresh: 'bg-emerald-400', stale: 'bg-amber-400', critical: 'bg-red-400', error: 'bg-red-400', missing: 'bg-slate-600' }
+            {freshness.platforms.map(p => {
+              const dots = { fresh: 'bg-emerald-400', stale: 'bg-amber-400', critical: 'bg-red-400', missing: 'bg-slate-600' }
               return (
-                <div key={p.platform} className="flex items-center gap-2 py-1" title={`${p.platform} — ${p.status} · ${p.age_minutes}m ago`}>
+                <div key={p.platform} className="flex items-center gap-2 py-1">
                   <span className={clsx("w-1.5 h-1.5 rounded-full shrink-0", dots[p.status] || 'bg-slate-600')} />
                   <span className="text-[11px] text-slate-300 truncate">{p.platform}</span>
                   <span className="text-[10px] text-slate-600 ml-auto shrink-0">{p.age_minutes}m</span>

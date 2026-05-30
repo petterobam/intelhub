@@ -2,14 +2,22 @@
 from flask import Blueprint
 from app.utils.helpers import standard_response, bj_now
 from datetime import datetime, timedelta
-import os, json
+import os, json, glob
 
 bp = Blueprint('health', __name__, url_prefix='/api/v1/health')
 
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+MODULE_LABELS = {
+    'hot_topics': '热点话题',
+    'policy': '政策法规',
+    'exchange': '交易所',
+    'financial': '财经数据',
+}
+
 @bp.route('', methods=['GET'])
 def health():
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    freshness_file = os.path.join(base_dir, 'data', 'freshness', 'status.json')
+    freshness_file = os.path.join(_BASE_DIR, 'data', 'freshness', 'status.json')
 
     health_score = 100
     if os.path.exists(freshness_file):
@@ -17,7 +25,7 @@ def health():
             with open(freshness_file, 'r') as f:
                 data = json.load(f)
                 health_score = data.get('health_score', 100)
-        except:
+        except Exception:
             pass
 
     status = 'ok' if health_score >= 70 else ('degraded' if health_score >= 40 else 'critical')
@@ -27,14 +35,163 @@ def health():
         'timestamp': bj_now().isoformat()
     })
 
+
+def _scan_module_data(module, now):
+    """Scan data/raw/{module} for freshness."""
+    module_path = os.path.join(_BASE_DIR, 'data', 'raw', module)
+    if not os.path.isdir(module_path):
+        return []
+    platforms = []
+    for entry in sorted(os.listdir(module_path)):
+        fpath = os.path.join(module_path, entry)
+        if os.path.isdir(fpath):
+            newest = 0
+            for root, dirs, files in os.walk(fpath):
+                for f in files:
+                    if f.endswith('.json'):
+                        try:
+                            ft = os.path.getmtime(os.path.join(root, f))
+                            if ft > newest:
+                                newest = ft
+                        except Exception:
+                            pass
+            if newest > 0:
+                age = int((now.timestamp() - newest) / 60)
+                platforms.append({
+                    'platform': entry,
+                    'status': 'fresh' if age < 120 else ('stale' if age < 360 else 'critical'),
+                    'age_minutes': age,
+                })
+            else:
+                platforms.append({'platform': entry, 'status': 'missing', 'age_minutes': 9999})
+        elif entry.endswith('.json'):
+            try:
+                ft = os.path.getmtime(fpath)
+                age = int((now.timestamp() - ft) / 60)
+                name = entry.replace('.json', '').replace(f'{module}-', '').replace('-crawler', '')
+                platforms.append({
+                    'platform': name,
+                    'status': 'fresh' if age < 120 else ('stale' if age < 360 else 'critical'),
+                    'age_minutes': age,
+                })
+            except Exception:
+                pass
+    return platforms
+
+
+def _scan_rss_sources(now):
+    """Build RSS source health from data files + DB."""
+    from app import db
+    from sqlalchemy import text
+
+    platforms = []
+    rss_dir = os.path.join(_BASE_DIR, 'data', 'raw', 'rss')
+    if os.path.isdir(rss_dir):
+        for entry in sorted(os.listdir(rss_dir)):
+            fpath = os.path.join(rss_dir, entry)
+            if os.path.isdir(fpath):
+                newest = 0
+                for root, dirs, files in os.walk(fpath):
+                    for f in files:
+                        if f.endswith('.json'):
+                            try:
+                                ft = os.path.getmtime(os.path.join(root, f))
+                                if ft > newest:
+                                    newest = ft
+                            except Exception:
+                                pass
+                if newest > 0:
+                    age = int((now.timestamp() - newest) / 60)
+                    platforms.append({
+                        'platform': entry,
+                        'status': 'fresh' if age < 180 else ('stale' if age < 720 else 'critical'),
+                        'age_minutes': age,
+                    })
+                else:
+                    platforms.append({'platform': entry, 'status': 'missing', 'age_minutes': 9999})
+            elif entry.endswith('.json'):
+                try:
+                    ft = os.path.getmtime(fpath)
+                    age = int((now.timestamp() - ft) / 60)
+                    name = entry.replace('.json', '')
+                    platforms.append({
+                        'platform': name,
+                        'status': 'fresh' if age < 180 else ('stale' if age < 720 else 'critical'),
+                        'age_minutes': age,
+                    })
+                except Exception:
+                    pass
+
+    # Also add RSS sources from DB that have no data yet
+    try:
+        existing = {p['platform'] for p in platforms}
+        for row in db.session.execute(text(
+            "SELECT name FROM rss_sources WHERE enabled = 1"
+        )).fetchall():
+            slug = row[0].lower().replace(' ', '-').replace('/', '-')[:40]
+            if slug not in existing:
+                platforms.append({'platform': slug, 'status': 'missing', 'age_minutes': 9999})
+    except Exception:
+        pass
+
+    return platforms
+
+
 @bp.route('/crawlers', methods=['GET'])
 def crawlers_health():
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    freshness_file = os.path.join(base_dir, 'data', 'freshness', 'status.json')
+    now = bj_now()
+
+    # Build category_groups like production
+    category_groups = {}
+    all_platforms = []
+    for module, label in MODULE_LABELS.items():
+        platforms = _scan_module_data(module, now)
+        if platforms:
+            fresh = sum(1 for p in platforms if p['status'] == 'fresh')
+            stale = sum(1 for p in platforms if p['status'] == 'stale')
+            critical = sum(1 for p in platforms if p['status'] in ('critical', 'missing'))
+            category_groups[module] = {
+                'total': len(platforms), 'fresh': fresh, 'stale': stale, 'critical': critical,
+                'platforms': platforms,
+            }
+            all_platforms.extend(platforms)
+
+    # RSS category
+    rss_platforms = _scan_rss_sources(now)
+    if rss_platforms:
+        fresh = sum(1 for p in rss_platforms if p['status'] == 'fresh')
+        stale = sum(1 for p in rss_platforms if p['status'] == 'stale')
+        critical = sum(1 for p in rss_platforms if p['status'] in ('critical', 'missing'))
+        category_groups['rss'] = {
+            'total': len(rss_platforms), 'fresh': fresh, 'stale': stale, 'critical': critical,
+            'platforms': rss_platforms,
+        }
+        all_platforms.extend(rss_platforms)
+
+    # Fallback: try reading freshness file if it exists
+    freshness_file = os.path.join(_BASE_DIR, 'data', 'freshness', 'status.json')
     if os.path.exists(freshness_file):
-        with open(freshness_file, 'r') as f:
-            return standard_response(json.load(f))
-    return standard_response({'platforms': [], 'health_score': 100})
+        try:
+            with open(freshness_file, 'r') as f:
+                fdata = json.load(f)
+                if fdata.get('category_groups'):
+                    category_groups = fdata['category_groups']
+                if fdata.get('platforms'):
+                    all_platforms = fdata['platforms']
+        except Exception:
+            pass
+
+    fresh_count = sum(1 for p in all_platforms if p.get('status') == 'fresh')
+    critical_count = sum(1 for p in all_platforms if p.get('status') in ('critical', 'missing'))
+    health_score = int((fresh_count / max(len(all_platforms), 1)) * 100)
+
+    return standard_response({
+        'platforms': all_platforms,
+        'category_groups': category_groups,
+        'health_score': health_score,
+        'fresh_count': fresh_count,
+        'critical_count': critical_count,
+    })
 
 
 @bp.route('/task-stats', methods=['GET'])
